@@ -14,23 +14,44 @@ class Mensaje{
 
 async  save(obtMensaje) {
     try { 
-    const contenidoActual = await fs.promises.readFile(this.ruta ,"utf-8")
-      if (contenidoActual.length == 0) {
- 
-     await fs.promises.writeFile(this.ruta,JSON.stringify(obtMensaje,null,2));
+        const contenidoActual = await fs.promises.readFile(this.ruta ,"utf-8")
+          if (contenidoActual.length == 0) {
+            const primerContenido ={
+                id: 1,
+                author: obtMensaje.user,
+                text : obtMensaje.text,
+                fecha: obtMensaje.fecha
+            }
+          await fs.promises.writeFile(this.ruta,JSON.stringify([primerContenido],null,2));
+            return  primerContenido.id;
+    
+          } else {
+            const contenidoJSON = JSON.parse(contenidoActual);
+            const ultimoID =  contenidoJSON[contenidoJSON.length - 1].id+1;
+            obtMensaje.id = ultimoID;
+            contenidoJSON.push(obtMensaje);
+            await fs.promises.writeFile(this.ruta,JSON.stringify(contenidoJSON,null,2));
+            return ultimoID;
+    
+            
+          }
+            }catch (e) {
+            console.log("error " + e.message);
+            }
+    
+    }
+   
 
-      } else {
-        const contenidoJSON = JSON.parse(contenidoActual);
-        contenidoJSON.push(obtMensaje);
-        await fs.promises.writeFile(this.ruta,JSON.stringify(contenidoJSON,null,2));
-        console.log(contenidoJSON)
+async getAll(){
+    try {
+    const  contenido = await fs.promises.readFile(this.ruta,"utf-8");
+    const contenidoJSON = JSON.parse(contenido);
+     return contenidoJSON;
   
+    }catch (e) {
+        console.log("error : " + e.message);  
+    }
 
-        
-      }
-        }catch (e) {          
-        console.log("error " + e.message);
-        }
 
 }
 }
@@ -41,18 +62,14 @@ class Contenedor{
 }
 
 async  save(obtProducto) {
-    console.log("entre el save");
     try { 
     const contenidoActual = await fs.promises.readFile(this.ruta ,"utf-8")
-    console.log("Llegea la linea 16");
       if (contenidoActual.length == 0) {
         const primerContenido ={
             id: 1,
-            titulo : obtProducto.title,
+            titulo : obtProducto.titulo,
             price: obtProducto.price,
             thumbnail: obtProducto.thumbnail
-            
-            
         }
      obtProducto=  await fs.promises.writeFile(this.ruta,JSON.stringify([primerContenido],null,2));
         return  primerContenido.id;
@@ -144,6 +161,9 @@ io.on("connection",async(socket)=>{
     console.log("Nuevo Cliente Conectado!");
     const todo = await producto.getAll();
       io.sockets.emit("todosProduct", todo); 
+      const allchat = await chatLog.getAll();
+      io.sockets.emit("messagesChat",allchat);
+
     socket.on("newProducto",async(data)=>{
       await  producto.save(data);
       const todo = await producto.getAll();
@@ -158,8 +178,7 @@ io.on("connection",async(socket)=>{
         fecha: fechaFormat
     }
     messages.push(newdata);
-    await chatLog.save(messages);
- 
+    await chatLog.save(newdata);
     // Enviamos mensajes a todos los users conectados
     io.sockets.emit("messagesChat", messages )
      
@@ -181,5 +200,5 @@ app.get("/productos", async(req,res) => {
 
 
 
-const producto = new Contenedor("Productos.txt");
-const chatLog = new Mensaje("ChatLog.txt"); 
+const producto = new Contenedor(__dirname +"/Productos.txt");
+const chatLog = new Mensaje(__dirname +"/ChatLog.txt"); 

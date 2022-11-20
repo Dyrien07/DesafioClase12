@@ -9,12 +9,11 @@ evento.preventDefault();
 const producto ={
     titulo: document.getElementById("title").value,
     price: document.getElementById("price").value,
-    Thumbnail: document.getElementById("Thumbnail").value
+    thumbnail: document.getElementById("thumbnail").value
 }
 socketCliente.emit("newProducto", producto)
 
 })
-
 
 
 socketCliente.on("todosProduct", async (data) =>{
@@ -39,28 +38,33 @@ socketCliente.on("messagesChat", (data) =>{
     chatContainer.innerHTML = message;
     })
     
-    
+    const userInput = document.getElementById("userInput");
+
+    userInput.addEventListener("change", (event) =>{
+        event.preventDefault();
+        
+        user= userInput.value;
+    })
     //capturar el nombre del usuario
     
-    let user = ""
-    Swal.fire({
-        title: 'Ingresa tu Emali',
-        input: 'email',
-        inputLabel: 'Direccion de correo electronico',
-        inputPlaceholder: 'Ingresa email',
-        allowOutsideClick: false
-    }).then(responense => {
-        console.log(responense);
-        user = responense.value;
-        document.getElementById("userName").innerHTML=  "Estas conectado como "+ user;
-    })
+    // let user = ""
+    // Swal.fire({
+    //     title: 'Ingresa tu Emali',
+    //     input: 'email',
+    //     inputLabel: 'Direccion de correo electronico',
+    //     inputPlaceholder: 'Ingresa email',
+    //     allowOutsideClick: false
+    // }).then(responense => {
+    //     console.log(responense);
+    //     user = responense.value;
+        
+    //})
     //Enviar msj al serviro
     
     const chatForm = document.getElementById("chatForm");
     chatForm.addEventListener("submit", (event)=>{
         event.preventDefault();
         console.log("Mensaje Enviado")
-        console.log(user);
         const message = {
             author: user,
             text : document.getElementById("chat").value,
