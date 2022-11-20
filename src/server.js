@@ -16,30 +16,19 @@ async  save(obtMensaje) {
     try { 
     const contenidoActual = await fs.promises.readFile(this.ruta ,"utf-8")
       if (contenidoActual.length == 0) {
-        const primerContenido ={
-            autor : obtMensaje.autor,
-            text: obtMensaje.mensaje ,
-            fecha: obtMensaje.fecha 
-        }
-     await fs.promises.writeFile(this.ruta,JSON.stringify([primerContenido],null,2));
+ 
+     await fs.promises.writeFile(this.ruta,JSON.stringify(obtMensaje,null,2));
 
       } else {
         const contenidoJSON = JSON.parse(contenidoActual);
         contenidoJSON.push(obtMensaje);
         await fs.promises.writeFile(this.ruta,JSON.stringify(contenidoJSON,null,2));
+        console.log(contenidoJSON)
   
 
         
       }
-        }catch (e) {
-            const primerContenido ={
-                autor : obtMensaje.autor,
-                text: obtMensaje.mensaje ,
-                fecha: obtMensaje.fecha 
-            }
-         await fs.promises.writeFile(this.ruta,JSON.stringify([primerContenido],null,2));
-    
-          
+        }catch (e) {          
         console.log("error " + e.message);
         }
 
@@ -169,10 +158,11 @@ io.on("connection",async(socket)=>{
         fecha: fechaFormat
     }
     messages.push(newdata);
+    await chatLog.save(messages);
  
     // Enviamos mensajes a todos los users conectados
     io.sockets.emit("messagesChat", messages )
-       await chatLog.save(messages);
+     
 })
     })
 

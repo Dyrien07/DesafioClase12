@@ -44,10 +44,11 @@ socketCliente.on("messagesChat", (data) =>{
     
     let user = ""
     Swal.fire({
-        title: "Bienvenido",
-        text: "Ingresa el Mail",
-        input: "text",
-        AllowOutsideClick : false
+        title: 'Ingresa tu Emali',
+        input: 'email',
+        inputLabel: 'Direccion de correo electronico',
+        inputPlaceholder: 'Ingresa email',
+        allowOutsideClick: false
     }).then(responense => {
         console.log(responense);
         user = responense.value;
