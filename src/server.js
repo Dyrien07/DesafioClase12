@@ -3,7 +3,48 @@ const handlebars = require("express-handlebars");
 const path = require('path');
 const fs = require('fs');
 const {Server} = require("socket.io");
+const moment = require('moment');
+
 const PORT =  8080;
+
+class Mensaje{
+    constructor(ruta) {
+        this.ruta = ruta;
+}
+
+async  save(obtMensaje) {
+    try { 
+    const contenidoActual = await fs.promises.readFile(this.ruta ,"utf-8")
+      if (contenidoActual.length == 0) {
+        const primerContenido ={
+            autor : obtMensaje.autor,
+            text: obtMensaje.mensaje ,
+            fecha: obtMensaje.fecha 
+        }
+     await fs.promises.writeFile(this.ruta,JSON.stringify([primerContenido],null,2));
+
+      } else {
+        const contenidoJSON = JSON.parse(contenidoActual);
+        contenidoJSON.push(obtMensaje);
+        await fs.promises.writeFile(this.ruta,JSON.stringify(contenidoJSON,null,2));
+  
+
+        
+      }
+        }catch (e) {
+            const primerContenido ={
+                autor : obtMensaje.autor,
+                text: obtMensaje.mensaje ,
+                fecha: obtMensaje.fecha 
+            }
+         await fs.promises.writeFile(this.ruta,JSON.stringify([primerContenido],null,2));
+    
+          
+        console.log("error " + e.message);
+        }
+
+}
+}
 
 class Contenedor{
     constructor(ruta) {
@@ -108,7 +149,9 @@ app.set('view engine', 'handlebars');
 
 const productos = new Contenedor("Productos.txt");
 const io = new Server(server);
+const messages =[];
 io.on("connection",async(socket)=>{
+   
     console.log("Nuevo Cliente Conectado!");
     const todo = await producto.getAll();
       io.sockets.emit("todosProduct", todo); 
@@ -117,6 +160,20 @@ io.on("connection",async(socket)=>{
       const todo = await producto.getAll();
       io.sockets.emit("todosProduct", todo);
     })
+
+    socket.emit("messagesChat", messages)
+    socket.on("newMsg", async (data)=>{
+    const fechaFormat = moment().format('MMMM Do YYYY, h:mm:ss a');
+    newdata ={
+        ...data,
+        fecha: fechaFormat
+    }
+    messages.push(newdata);
+ 
+    // Enviamos mensajes a todos los users conectados
+    io.sockets.emit("messagesChat", messages )
+       await chatLog.save(messages);
+})
     })
 
 app.get("/", async(req,res) => {
@@ -126,14 +183,13 @@ app.get("/productos", async(req,res) => {
      res.render("listado",{total: await productos.getAll()})
 });
 
-app.post("/productos", async(req, res) => {
-    await producto.save(req.body); 
-    console.log( req.body);
-    res.redirect("/"); 
-});
+
+
+
 
 
 
 
 
 const producto = new Contenedor("Productos.txt");
+const chatLog = new Mensaje("ChatLog.txt"); 

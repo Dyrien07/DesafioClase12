@@ -1,6 +1,3 @@
-
-
-
 console.log("Funcionando");
 
 
@@ -18,6 +15,8 @@ socketCliente.emit("newProducto", producto)
 
 })
 
+
+
 socketCliente.on("todosProduct", async (data) =>{
     const contenedorProd = document.getElementById("contenedorProd");
     console.log(data);
@@ -26,9 +25,49 @@ socketCliente.on("todosProduct", async (data) =>{
     const template = Handlebars.compile(templateForm);
 
     const HTML = template({producto:data})
-    contenedorProd.innerHTML = HTML;
+   contenedorProd.innerHTML = HTML; 
+});
 
-
-})
-
-
+socketCliente.on("messagesChat", (data) =>{
+    console.log(data);
+    let message = "";
+    data.forEach(Element=>{
+        message +=  ` <p><span class ="autor"><b>Autor: ${Element.author}</b>
+         </span>-  <span class="fecha">-[${Element.fecha}] </span>
+         <span class="mensaje"> Mensaje: ${Element.text} </span></p>`
+    });
+    chatContainer.innerHTML = message;
+    })
+    
+    
+    //capturar el nombre del usuario
+    
+    let user = ""
+    Swal.fire({
+        title: "Bienvenido",
+        text: "Ingresa el Mail",
+        input: "text",
+        AllowOutsideClick : false
+    }).then(responense => {
+        console.log(responense);
+        user = responense.value;
+        document.getElementById("userName").innerHTML=  "Estas conectado como "+ user;
+    })
+    //Enviar msj al serviro
+    
+    const chatForm = document.getElementById("chatForm");
+    chatForm.addEventListener("submit", (event)=>{
+        event.preventDefault();
+        console.log("Mensaje Enviado")
+        console.log(user);
+        const message = {
+            author: user,
+            text : document.getElementById("chat").value,
+           } 
+    
+           
+           console.log(message);
+           socketCliente.emit("newMsg", message);
+        
+    })
+    
